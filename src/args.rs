@@ -1,24 +1,17 @@
 use std::collections::HashSet;
 use std::fs;
-use std::path::{Path};
+use std::path::Path;
 use std::process::exit;
 
 use clap::Parser;
 
-fn main() {
-    println!("Hello, world!");
-    let args = Args::parse();
-    let songs = build_file_list(args.files);
-    dbg!(songs);
-}
-
 #[derive(Parser, Debug)]
 #[clap(author = "Sebastian Bartoszewicz")]
-struct Args {
-    files: Vec<String>,
+pub struct Args {
+    pub files: Vec<String>,
 }
 
-fn build_file_list(files: Vec<String>) -> Vec<String> {
+pub fn build_file_list(files: Vec<String>) -> Vec<String> {
     check_for_invalid_paths(&files);
 
     let expanded_directories = get_files_from_folders_recursively(files);
@@ -37,12 +30,12 @@ fn make_paths_absolute(files: Vec<String>) -> Vec<String> {
 
 fn check_for_invalid_extension(paths: Vec<String>) -> Vec<String> {
     let valid_extensions = HashSet::from([
-        "aiff",
-        "aif",
-        "alfc",
-        "ape",
-        "apl",
-        "bwf",
+        // "aiff",
+        // "aif",
+        // "alfc",
+        // "ape",
+        // "apl",
+        // "bwf",
         "flac",
         "mp3",
         "mp4",
@@ -50,21 +43,22 @@ fn check_for_invalid_extension(paths: Vec<String>) -> Vec<String> {
         "m4b",
         "m4p",
         "m4r",
-        "mpc",
+        // "mpc",
         "ogg",
-        "tta",
-        "wma",
+        "vorbis",
+        // "tta",
+        // "wma",
         "wv",
     ]);
 
     paths.into_iter().filter(|path| {
         let extension = Path::new(&path).extension().expect("To be a file extension").to_str().expect("To be a string slice");
-            if !valid_extensions.contains(extension) {
-                println!("Ignoring the following file due to an unsupported extension: {}", path);
-               false
-            } else {
-               true
-            }
+        if !valid_extensions.contains(extension) {
+            println!("Ignoring the following file due to an unsupported extension: {}", path);
+            false
+        } else {
+            true
+        }
     }).collect()
 }
 
