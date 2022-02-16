@@ -12,6 +12,6 @@ fn main() {
         let decoded = decode_file(song).expect("To be a decoding result");
         dbg!(song);
         dbg!(&decoded);
-        dbg!(scan_file(decoded).expect("To be a global loudness in LUFS"));
+        println!("{}", scan_file(decoded).expect("To be a global loudness in LUFS"));
     });
 }
