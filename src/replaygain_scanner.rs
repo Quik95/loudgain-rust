@@ -1,6 +1,5 @@
 use std::fmt;
-use std::fmt::{Debug, Formatter, write};
-use std::iter::Scan;
+use std::fmt::{Debug, Formatter};
 
 use ebur128::EbuR128;
 use ebur128::Error;
@@ -35,7 +34,7 @@ pub fn scan_file(file: DecodedFile) -> Result<ScanResult, Error> {
     let mode = get_mode();
 
     let mut instance = EbuR128::new(file.channels, file.rate, mode)?;
-    instance.add_frames_i16(&*file.pcm)?;
+    instance.add_frames_i16(file.pcm.as_slice())?;
 
     Ok(ScanResult::new(
         instance.loudness_global()?,
