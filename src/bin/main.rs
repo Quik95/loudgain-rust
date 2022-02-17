@@ -1,13 +1,11 @@
-use clap::Parser;
-
-use loudgain_rust::args::{Args, build_file_list};
+use loudgain_rust::args::{build_file_list};
+use loudgain_rust::args::ARGS;
 use loudgain_rust::decode_audio::decode_file;
 use loudgain_rust::replaygain_scanner::{scan_file};
 
 fn main() {
     println!("Hello, world!");
-    let args = Args::parse();
-    let songs = build_file_list(args.files);
+    let songs = build_file_list(ARGS.files.clone());
     songs.iter().for_each(|song| {
         let decoded = decode_file(song).expect("To be a decoding result");
         dbg!(song);

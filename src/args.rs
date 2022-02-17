@@ -4,11 +4,19 @@ use std::path::Path;
 use std::process::exit;
 
 use clap::Parser;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref ARGS: Args = Args::parse();
+}
 
 #[derive(Parser, Debug)]
 #[clap(author = "Sebastian Bartoszewicz")]
 pub struct Args {
     pub files: Vec<String>,
+
+    #[clap(short = 'q', long = "quiet")]
+    pub quiet: bool,
 }
 
 pub fn build_file_list(files: Vec<String>) -> Vec<String> {
@@ -53,8 +61,10 @@ fn check_for_invalid_extension(paths: Vec<String>) -> Vec<String> {
 
     paths.into_iter().filter(|path| {
         let extension = Path::new(&path).extension().expect("To be a file extension").to_str().expect("To be a string slice");
-        if !valid_extensions.contains(extension) {
-            println!("Ignoring the following file due to an unsupported extension: {}", path);
+        return if !valid_extensions.contains(extension) {
+            if !ARGS.quiet {
+                println!("Ignoring the following file due to an unsupported extension: {}", path);
+            }
             false
         } else {
             true

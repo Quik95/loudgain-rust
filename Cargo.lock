@@ -637,6 +637,7 @@ dependencies = [
  "clap 3.0.14",
  "criterion",
  "ebur128",
+ "lazy_static",
  "rodio",
 ]
 
