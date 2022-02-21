@@ -23,7 +23,7 @@ pub struct TrackGain<'a> {
     pub true_peak: LinearLoudness,
     pub range: Decibel,
     pub reference_loudness: LoudnessUnitFullScale,
-    pub integrated_loudness: LoudnessUnitFullScale
+    pub integrated_loudness: LoudnessUnitFullScale,
 }
 
 impl fmt::Display for ScanResult {
@@ -37,7 +37,7 @@ impl ScanResult {
         ScanResult {
             true_peak: LinearLoudness::new(true_peak),
             loudness_range: Decibel::new(loudness_range),
-            integrated_loudness: LoudnessUnitFullScale::new(integrated_loudness)
+            integrated_loudness: LoudnessUnitFullScale::new(integrated_loudness),
         }
     }
 }
@@ -56,7 +56,7 @@ pub fn scan_file(file: DecodedFile) -> Result<ScanResult, Error> {
 }
 
 fn get_mode() -> ebur128::Mode {
-    let mut mode  = ebur128::Mode::I;
+    let mut mode = ebur128::Mode::I;
     mode.insert(ebur128::Mode::TRUE_PEAK);
     mode.insert(ebur128::Mode::LRA);
 

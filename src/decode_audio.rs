@@ -14,9 +14,10 @@ pub struct DecodedFile {
 
 impl DecodedFile {
     pub fn new(pcm: Vec<i16>, channels: u32, rate: u32) -> Self {
-        Self {pcm, channels, rate}
+        Self { pcm, channels, rate }
     }
 }
+
 impl fmt::Debug for DecodedFile {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "pcm.len() = {}, channels: {}, sample_rate: {}", self.pcm.len(), self.channels, self.rate)

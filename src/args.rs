@@ -1,10 +1,13 @@
 use std::collections::HashSet;
+use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::Path;
 use std::process::exit;
 
 use clap::Parser;
 use lazy_static::lazy_static;
+
+use crate::loudness_types::{Decibel, LoudnessUnitFullScale};
 
 lazy_static! {
     pub static ref ARGS: Args = Args::parse();
@@ -17,9 +20,15 @@ pub struct Args {
 
     #[clap(short = 'q', long = "quiet")]
     pub quiet: bool,
-    
-    #[clap(short = 'c', long = "noclip")]
+
+    #[clap(short = 'k', long = "noclip")]
     pub no_clip: bool,
+
+    #[clap(short = 'K', long = "maxtpl", default_value_t = LoudnessUnitFullScale::new(-1.0))]
+    pub maxtlp: LoudnessUnitFullScale,
+
+    #[clap(short = 'd', long = "pregain", default_value_t = Decibel::new(0.0))]
+    pub pregain: Decibel,
 }
 
 pub fn build_file_list(files: Vec<String>) -> Vec<String> {
@@ -71,7 +80,7 @@ fn check_for_invalid_extension(paths: Vec<String>) -> Vec<String> {
             false
         } else {
             true
-        }
+        };
     }).collect()
 }
 

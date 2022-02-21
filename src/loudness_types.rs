@@ -1,7 +1,11 @@
 use std::cmp::Ordering;
+use std::error::Error;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
+use std::num::ParseFloatError;
 use std::ops::{Add, Div, Mul, Sub};
+use std::str::FromStr;
+use std::string::ParseError;
 
 #[derive(Copy, Clone)]
 pub struct Decibel(f64);
@@ -33,6 +37,18 @@ impl Sub for Decibel {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output { Self::new(self.0 - rhs.0) }
+}
+
+impl FromStr for Decibel {
+    type Err = ParseFloatError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.ends_with(" dB") {
+            Ok(Decibel::new(s[0..s.len()-3].parse::<f64>()?))
+        } else {
+            Ok(Decibel::new(s.parse::<f64>()?))
+        }
+    }
 }
 
 impl Debug for Decibel {
@@ -71,6 +87,18 @@ impl LoudnessUnitFullScale {
     }
     pub fn as_dB(&self) -> Decibel { Decibel::new(self.0) }
     pub fn as_linear(&self) -> LinearLoudness { self.as_dB().as_linear() }
+}
+
+impl FromStr for LoudnessUnitFullScale {
+    type Err = ParseFloatError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.ends_with(" LUFS") {
+            Ok(LoudnessUnitFullScale::new(s[0..s.len()-5].parse::<f64>()?))
+        } else {
+            Ok(LoudnessUnitFullScale::new(s.parse::<f64>()?))
+        }
+    }
 }
 
 impl Debug for LoudnessUnitFullScale {
