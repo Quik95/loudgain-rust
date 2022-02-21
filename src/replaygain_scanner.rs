@@ -3,8 +3,10 @@ use std::fmt::{Debug, Formatter};
 
 use ebur128::EbuR128;
 use ebur128::Error;
+use rodio::source::FadeIn;
 
 use crate::decode_audio::DecodedFile;
+use crate::gain::calculate_gain;
 use crate::loudness_types::{Decibel, LinearLoudness, LoudnessUnitFullScale};
 
 #[derive(Debug)]
@@ -12,6 +14,16 @@ pub struct ScanResult {
     pub true_peak: LinearLoudness,
     pub loudness_range: Decibel,
     pub integrated_loudness: LoudnessUnitFullScale,
+}
+
+#[derive(Debug)]
+pub struct TrackGain<'a> {
+    pub filepath: &'a str,
+    pub gain: Decibel,
+    pub true_peak: LinearLoudness,
+    pub range: Decibel,
+    pub reference_loudness: LoudnessUnitFullScale,
+    pub integrated_loudness: LoudnessUnitFullScale
 }
 
 impl fmt::Display for ScanResult {
@@ -51,3 +63,13 @@ fn get_mode() -> ebur128::Mode {
     mode
 }
 
+pub fn get_track_gain(filepath: &str, scan: ScanResult) -> TrackGain {
+    TrackGain {
+        filepath,
+        gain: calculate_gain(scan.integrated_loudness, scan.true_peak),
+        true_peak: scan.true_peak,
+        range: scan.loudness_range,
+        reference_loudness: LoudnessUnitFullScale::new(-18.0),
+        integrated_loudness: scan.integrated_loudness,
+    }
+}

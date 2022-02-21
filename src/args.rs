@@ -17,6 +17,9 @@ pub struct Args {
 
     #[clap(short = 'q', long = "quiet")]
     pub quiet: bool,
+    
+    #[clap(short = 'c', long = "noclip")]
+    pub no_clip: bool,
 }
 
 pub fn build_file_list(files: Vec<String>) -> Vec<String> {
