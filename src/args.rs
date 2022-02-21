@@ -86,22 +86,12 @@ fn check_for_invalid_extension(paths: Vec<String>) -> Vec<String> {
 
 fn recursively_expand_directory(file: String) -> Vec<String> {
     let path = Path::new(&file);
-    if path.is_dir() {
-        path.read_dir()
-            .expect("To return directory contents")
-            .map(|entry| {
-                let path = entry.expect("To be a directory entry").path();
-                return if path.is_dir() {
-                    recursively_expand_directory(path.to_str().expect("To be &str").to_string())
-                } else {
-                    vec![path.to_str().expect("To be path").to_string()]
-                };
-            })
-            .flatten()
-            .collect()
-    } else {
-        vec![file.to_string()]
+    let mut res: Vec<String> = Vec::new();
+    // TODO: Fix this to not ignore errors
+    for entry in walkdir::WalkDir::new(path).into_iter().filter_map(|e| e.ok()).filter(|e| e.path().is_file()) {
+        res.push(entry.path().to_str().expect("To be a string slice").to_string());
     }
+    res
 }
 
 fn check_for_invalid_paths(files: &[String]) {

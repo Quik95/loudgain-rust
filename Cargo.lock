@@ -639,6 +639,7 @@ dependencies = [
  "ebur128",
  "lazy_static",
  "rodio",
+ "walkdir",
 ]
 
 [[package]]
