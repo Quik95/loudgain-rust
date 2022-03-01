@@ -1,11 +1,10 @@
 use std::fs;
 use std::path::Path;
 
-use crate::args::ARGS;
-
 use subprocess::{ExitStatus, Popen, PopenConfig, Redirection};
 use tempfile::{Builder, NamedTempFile};
 
+use crate::args::ARGS;
 use crate::replaygain_scanner::TrackGain;
 
 const RG_TRACK_GAIN: &str = "REPLAYGAIN_TRACK_GAIN";
@@ -35,12 +34,15 @@ pub fn save_tags(tags: &TrackGain) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn swap_files(old: &str, new: &str) -> Result<u64, std::io::Error> {
-    //TODO: make it safer by renaming after the copying has finished instead of overwriting
-
+fn swap_files(old: &str, new: &str) -> Result<(), std::io::Error> {
     // it's fine to copy, because the temporary file will be deleted when it goes out of scope
-    // it might not be deleted the program terminates abruptly, but it will be in a temp dir anyway
-    fs::copy(new, old)
+    // it might not be deleted if the program terminates abruptly, but it will be in a temp dir anyway
+    let topdir = Path::new(old).parent().ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Parent directory does not exists"))?;
+    let name = Path::new(new).file_name().ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "File does not have a name"))?;
+    let new_path = topdir.join(name);
+    fs::copy(new, &new_path)?;
+
+    fs::rename(new_path, old)
 }
 
 fn get_file_extension(path: &str) -> &str {
