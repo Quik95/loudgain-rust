@@ -1,11 +1,9 @@
 use std::cmp::Ordering;
-use std::error::Error;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::num::ParseFloatError;
 use std::ops::{Add, Div, Mul, Sub};
 use std::str::FromStr;
-use std::string::ParseError;
 
 #[derive(Copy, Clone)]
 pub struct Decibel(f64);
@@ -23,7 +21,7 @@ impl Decibel {
     pub fn new(val: f64) -> Self {
         Decibel(val)
     }
-    pub fn as_LUFS(&self) -> LoudnessUnitFullScale { LoudnessUnitFullScale::new(self.0) }
+    #[allow(non_snake_case)] pub fn as_LUFS(&self) -> LoudnessUnitFullScale { LoudnessUnitFullScale::new(self.0) }
     pub fn as_linear(&self) -> LinearLoudness { LinearLoudness::new((self.0 / 20.0).powi(10)) }
 }
 
@@ -44,7 +42,7 @@ impl FromStr for Decibel {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.ends_with(" dB") {
-            Ok(Decibel::new(s[0..s.len()-3].parse::<f64>()?))
+            Ok(Decibel::new(s[0..s.len() - 3].parse::<f64>()?))
         } else {
             Ok(Decibel::new(s.parse::<f64>()?))
         }
@@ -85,7 +83,7 @@ impl LoudnessUnitFullScale {
     pub fn new(val: f64) -> Self {
         Self(val)
     }
-    pub fn as_dB(&self) -> Decibel { Decibel::new(self.0) }
+    #[allow(non_snake_case)] pub fn as_dB(&self) -> Decibel { Decibel::new(self.0) }
     pub fn as_linear(&self) -> LinearLoudness { self.as_dB().as_linear() }
 }
 
@@ -94,7 +92,7 @@ impl FromStr for LoudnessUnitFullScale {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.ends_with(" LUFS") {
-            Ok(LoudnessUnitFullScale::new(s[0..s.len()-5].parse::<f64>()?))
+            Ok(LoudnessUnitFullScale::new(s[0..s.len() - 5].parse::<f64>()?))
         } else {
             Ok(LoudnessUnitFullScale::new(s.parse::<f64>()?))
         }
@@ -129,7 +127,7 @@ impl LinearLoudness {
     pub fn new(val: f64) -> Self {
         Self(val)
     }
-    pub fn as_dB(&self) -> Decibel { Decibel::new(20.0 * self.0.log10()) }
+    #[allow(non_snake_case)] pub fn as_dB(&self) -> Decibel { Decibel::new(20.0 * self.0.log10()) }
 }
 
 impl Add for LinearLoudness {
@@ -146,7 +144,7 @@ impl Mul for LinearLoudness {
 
 impl PartialOrd for LinearLoudness {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        return Some(if self.0 > other.0 { Ordering::Greater } else if self.0 < other.0 { Ordering::Less } else { Ordering::Equal });
+        Some(if self.0 > other.0 { Ordering::Greater } else if self.0 < other.0 { Ordering::Less } else { Ordering::Equal })
     }
 }
 

@@ -3,7 +3,6 @@ use std::fmt::{Debug, Formatter};
 
 use ebur128::EbuR128;
 use ebur128::Error;
-use rodio::source::FadeIn;
 
 use crate::decode_audio::DecodedFile;
 use crate::gain::calculate_gain;
