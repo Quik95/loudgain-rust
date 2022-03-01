@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::Path;
 
+use crate::args::ARGS;
+
 use subprocess::{ExitStatus, Popen, PopenConfig, Redirection};
 use tempfile::{Builder, NamedTempFile};
 
@@ -13,6 +15,14 @@ const RG_ALBUM_PEAK: &str = "REPLAYGAIN_ALBUM_PEAK";
 const RG_TRACK_RANGE: &str = "REPLAYGAIN_TRACK_RANGE";
 const RG_ALBUM_RANGE: &str = "REPLAYGAIN_ALBUM_RANGE";
 const RG_REFERENCE_LOUDNESS: &str = "REPLAYGAIN_REFERENCE_LOUDNESS";
+
+const RG_TRACK_GAIN_LOWERCASE: &str = "replaygain_track_gain";
+const RG_TRACK_PEAK_LOWERCASE: &str = "replaygain_track_peak";
+const RG_ALBUM_GAIN_LOWERCASE: &str = "replaygain_album_gain";
+const RG_ALBUM_PEAK_LOWERCASE: &str = "replaygain_album_peak";
+const RG_TRACK_RANGE_LOWERCASE: &str = "replaygain_track_range";
+const RG_ALBUM_RANGE_LOWERCASE: &str = "replaygain_album_range";
+const RG_REFERENCE_LOUDNESS_LOWERCASE: &str = "replaygain_reference_loudness";
 
 pub fn save_tags(tags: &TrackGain) -> Result<(), std::io::Error> {
     let formatted = format_tags(tags);
@@ -71,10 +81,12 @@ fn ffmpeg_write_tags(filepath: &str, tags: Vec<String>) -> Result<NamedTempFile,
 }
 
 fn format_tags(tags: &TrackGain) -> Vec<String> {
-    vec![
-        "-metadata".to_string(), format!("{}={}", RG_TRACK_GAIN, tags.gain),
-        "-metadata".to_string(), format!("{}={}", RG_TRACK_PEAK, tags.true_peak),
-        "-metadata".to_string(), format!("{}={}", RG_TRACK_RANGE, tags.range),
-        "-metadata".to_string(), format!("{}={}", RG_REFERENCE_LOUDNESS, tags.reference_loudness),
-    ]
+    let formatted = vec![
+        "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_GAIN_LOWERCASE} else {RG_TRACK_GAIN}, tags.gain),
+        "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_PEAK_LOWERCASE} else {RG_TRACK_PEAK}, tags.true_peak),
+        "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_RANGE_LOWERCASE} else {RG_TRACK_RANGE}, tags.range),
+        "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_REFERENCE_LOUDNESS_LOWERCASE} else {RG_REFERENCE_LOUDNESS}, tags.reference_loudness),
+    ];
+
+    formatted
 }

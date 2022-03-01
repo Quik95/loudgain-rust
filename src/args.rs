@@ -28,6 +28,9 @@ pub struct Args {
 
     #[clap(short = 'd', long = "pregain", default_value_t = Decibel::new(0.0))]
     pub pregain: Decibel,
+
+    #[clap(short = 'L', long = "lowercase")]
+    pub lowercase_tags: bool,
 }
 
 pub fn build_file_list(files: Vec<String>) -> Vec<String> {
