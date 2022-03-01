@@ -24,8 +24,12 @@ const RG_TRACK_RANGE_LOWERCASE: &str = "replaygain_track_range";
 const RG_ALBUM_RANGE_LOWERCASE: &str = "replaygain_album_range";
 const RG_REFERENCE_LOUDNESS_LOWERCASE: &str = "replaygain_reference_loudness";
 
+const RG_TRACK_GAIN_OPUS: &str = "R128_TRACK_GAIN";
+const RG_ALBUM_GAIN_OPUS: &str = "R128_ALBUM_GAIN";
+
 pub fn save_tags(tags: &TrackGain) -> Result<(), std::io::Error> {
-    let formatted = format_tags(tags);
+    let extension = get_file_extension(tags.filepath);
+    let formatted = format_tags(tags, extension);
     let new_file = ffmpeg_write_tags(tags.filepath, formatted).expect("To be a copy of a song with the replagain tags written to it.");
     swap_files(tags.filepath, new_file.path().to_str().expect("To be a string slice"))?;
     Ok(())
@@ -80,13 +84,18 @@ fn ffmpeg_write_tags(filepath: &str, tags: Vec<String>) -> Result<NamedTempFile,
     }
 }
 
-fn format_tags(tags: &TrackGain) -> Vec<String> {
-    let formatted = vec![
-        "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_GAIN_LOWERCASE} else {RG_TRACK_GAIN}, tags.gain),
-        "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_PEAK_LOWERCASE} else {RG_TRACK_PEAK}, tags.true_peak),
-        "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_RANGE_LOWERCASE} else {RG_TRACK_RANGE}, tags.range),
-        "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_REFERENCE_LOUDNESS_LOWERCASE} else {RG_REFERENCE_LOUDNESS}, tags.reference_loudness),
-    ];
-
-    formatted
+fn format_tags(tags: &TrackGain, extension: &str) -> Vec<String> {
+    match extension {
+        "ogg" => vec![
+            // as to replicate the loudgain behavior we don't write track peak tags.
+            // also extra tags are not allowed in Opus
+            "-metadata".to_string(), format!("{}={}", RG_TRACK_GAIN_OPUS, tags.gain.to_q78num())
+        ],
+        _ => vec![
+            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_GAIN_LOWERCASE} else {RG_TRACK_GAIN}, tags.gain),
+            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_PEAK_LOWERCASE} else {RG_TRACK_PEAK}, tags.true_peak),
+            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_RANGE_LOWERCASE} else {RG_TRACK_RANGE}, tags.range),
+            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_REFERENCE_LOUDNESS_LOWERCASE} else {RG_REFERENCE_LOUDNESS}, tags.reference_loudness),
+        ],
+    }
 }
