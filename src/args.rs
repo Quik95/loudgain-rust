@@ -24,7 +24,7 @@ pub struct Args {
     #[clap(short = 'k', long = "noclip")]
     pub no_clip: bool,
 
-    #[clap(short = 'K', long = "maxtpl", default_value_t = LoudnessUnitFullScale::new(-1.0))]
+    #[clap(short = 'K', long = "maxtpl", default_value_t = LoudnessUnitFullScale::new(- 1.0))]
     pub maxtlp: LoudnessUnitFullScale,
 
     #[clap(short = 'd', long = "pregain", default_value_t = Decibel::new(0.0))]
