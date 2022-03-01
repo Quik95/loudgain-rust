@@ -28,10 +28,10 @@ const RG_TRACK_GAIN_OPUS: &str = "R128_TRACK_GAIN";
 const RG_ALBUM_GAIN_OPUS: &str = "R128_ALBUM_GAIN";
 
 pub fn save_tags(tags: &TrackGain) -> Result<(), std::io::Error> {
-    let extension = get_file_extension(tags.filepath);
+    let extension = get_file_extension(&tags.filepath);
     let formatted = format_tags(tags, extension);
-    let new_file = ffmpeg_write_tags(tags.filepath, formatted).expect("To be a copy of a song with the replagain tags written to it.");
-    swap_files(tags.filepath, new_file.path().to_str().expect("To be a string slice"))?;
+    let new_file = ffmpeg_write_tags(&tags.filepath, formatted).expect("To be a copy of a song with the replagain tags written to it.");
+    swap_files(&tags.filepath, new_file.path().to_str().expect("To be a string slice"))?;
     Ok(())
 }
 

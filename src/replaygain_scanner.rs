@@ -16,8 +16,8 @@ pub struct ScanResult {
 }
 
 #[derive(Debug)]
-pub struct TrackGain<'a> {
-    pub filepath: &'a str,
+pub struct TrackGain {
+    pub filepath: String,
     pub gain: Decibel,
     pub true_peak: LinearLoudness,
     pub range: Decibel,
@@ -62,7 +62,7 @@ fn get_mode() -> ebur128::Mode {
     mode
 }
 
-pub fn get_track_gain(filepath: &str, scan: ScanResult) -> TrackGain {
+pub fn get_track_gain(filepath: String, scan: ScanResult) -> TrackGain {
     TrackGain {
         filepath,
         gain: calculate_gain(scan.integrated_loudness, scan.true_peak),
