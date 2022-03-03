@@ -1,7 +1,10 @@
 use std::collections::HashSet;
+use std::fmt::{Debug, Display, Formatter};
 use std::fs;
+use std::iter::Scan;
 use std::path::Path;
 use std::process::exit;
+use std::str::FromStr;
 
 use clap::Parser;
 use lazy_static::lazy_static;
@@ -10,6 +13,55 @@ use crate::loudness_types::{Decibel, LoudnessUnitFullScale};
 
 lazy_static! {
     pub static ref ARGS: Args = Args::parse();
+}
+
+pub enum ScanMode {
+    DontWriteTags,
+    DeleteTags,
+    WriteTags,
+    WriteExtraTags,
+    WriteExtraTagsLufs,
+}
+
+impl Display for ScanMode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let res = match self {
+            ScanMode::DontWriteTags => 's',
+            ScanMode::DeleteTags => 'd',
+            ScanMode::WriteTags => 'i',
+            ScanMode::WriteExtraTags => 'e',
+            ScanMode::WriteExtraTagsLufs => 'l',
+        };
+        write!(f, "{}", res)
+    }
+}
+
+impl Debug for ScanMode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+       let res = match self {
+           ScanMode::DontWriteTags => 's',
+           ScanMode::DeleteTags => 'd',
+           ScanMode::WriteTags => 'i',
+           ScanMode::WriteExtraTags => 'e',
+           ScanMode::WriteExtraTagsLufs => 'l',
+       };
+        write!(f, "{}", res)
+    }
+}
+
+impl FromStr for ScanMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "s" => Ok(ScanMode::DontWriteTags),
+            "d" => Ok(ScanMode::DeleteTags),
+            "i" => Ok(ScanMode::WriteTags),
+            "e" => Ok(ScanMode::WriteExtraTags),
+            "l" => Ok(ScanMode::WriteExtraTagsLufs),
+            _ => Err(format!("Cannot parse {} into a tag mode.", s)),
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -31,6 +83,12 @@ pub struct Args {
 
     #[clap(short = 'L', long = "lowercase")]
     pub lowercase_tags: bool,
+
+    #[clap(short = 'r', long = "track")]
+    pub track: bool,
+
+    #[clap(short = 's', long = "tagmode", default_value_t = ScanMode::DontWriteTags)]
+    pub scan_mode: ScanMode,
 }
 
 pub fn build_file_list(files: Vec<String>) -> Vec<String> {

@@ -22,6 +22,7 @@ impl Decibel {
         Decibel(val)
     }
     #[allow(non_snake_case)] pub fn as_LUFS(&self) -> LoudnessUnitFullScale { LoudnessUnitFullScale::new(self.0) }
+    #[allow(non_snake_case)] pub fn as_LU(&self) -> LoudnessUnit { LoudnessUnit::new(self.0) }
     pub fn as_linear(&self) -> LinearLoudness { LinearLoudness::new((self.0 / 20.0).powi(10)) }
     pub fn to_q78num(&self) -> i32 { (self.0 * 256.0).round() as i32 }
 }

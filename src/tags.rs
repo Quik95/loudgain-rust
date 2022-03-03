@@ -4,7 +4,7 @@ use std::path::Path;
 use subprocess::{ExitStatus, Popen, PopenConfig, Redirection};
 use tempfile::{Builder, NamedTempFile};
 
-use crate::args::ARGS;
+use crate::args::{ARGS, ScanMode};
 use crate::replaygain_scanner::TrackGain;
 
 const RG_TRACK_GAIN: &str = "REPLAYGAIN_TRACK_GAIN";
@@ -27,11 +27,46 @@ const RG_TRACK_GAIN_OPUS: &str = "R128_TRACK_GAIN";
 const RG_ALBUM_GAIN_OPUS: &str = "R128_ALBUM_GAIN";
 
 pub fn save_tags(tags: &TrackGain) -> Result<(), std::io::Error> {
+    match ARGS.scan_mode {
+        ScanMode::DontWriteTags => return Ok(()),
+        ScanMode::DeleteTags => return remove_rg_tags(&tags.filepath),
+        _ => (),
+    };
+
     let extension = get_file_extension(&tags.filepath);
     let formatted = format_tags(tags, extension);
-    let new_file = ffmpeg_write_tags(&tags.filepath, formatted).expect("To be a copy of a song with the replagain tags written to it.");
+    let new_file = ffmpeg_write_tags(&tags.filepath, formatted).expect("To be a copy of a song with the replaygain tags written to it.");
     swap_files(&tags.filepath, new_file.path().to_str().expect("To be a string slice"))?;
     Ok(())
+}
+
+fn remove_rg_tags(filepath: &str) -> Result<(), std::io::Error> {
+    let tags = match get_file_extension(filepath) {
+        // for some reason currently doesn't work for opus. Maybe a ffmpeg bug?
+        "ogg" => vec![
+            "-metadata".to_string(), format!("{}=", RG_TRACK_GAIN_OPUS),
+            "-metadata".to_string(), format!("{}=", RG_ALBUM_GAIN_OPUS),
+        ],
+        _ => vec![
+            "-metadata".to_string(), format!("{}=", RG_TRACK_GAIN),
+            "-metadata".to_string(), format!("{}=", RG_ALBUM_GAIN),
+            "-metadata".to_string(), format!("{}=", RG_TRACK_GAIN_LOWERCASE),
+            "-metadata".to_string(), format!("{}=", RG_ALBUM_GAIN_LOWERCASE),
+            "-metadata".to_string(), format!("{}=", RG_TRACK_PEAK),
+            "-metadata".to_string(), format!("{}=", RG_ALBUM_PEAK),
+            "-metadata".to_string(), format!("{}=", RG_TRACK_PEAK_LOWERCASE),
+            "-metadata".to_string(), format!("{}=", RG_ALBUM_PEAK_LOWERCASE),
+            "-metadata".to_string(), format!("{}=", RG_REFERENCE_LOUDNESS),
+            "-metadata".to_string(), format!("{}=", RG_REFERENCE_LOUDNESS_LOWERCASE),
+            "-metadata".to_string(), format!("{}=", RG_TRACK_RANGE),
+            "-metadata".to_string(), format!("{}=", RG_ALBUM_RANGE),
+            "-metadata".to_string(), format!("{}=", RG_TRACK_RANGE_LOWERCASE),
+            "-metadata".to_string(), format!("{}=", RG_ALBUM_RANGE_LOWERCASE),
+        ]
+    };
+
+    let new_file = ffmpeg_write_tags(filepath, tags).expect("To be a song with ReplayGain tags removed.");
+    swap_files(filepath, new_file.path().to_str().expect("To be a string slice"))
 }
 
 fn swap_files(old: &str, new: &str) -> Result<(), std::io::Error> {
@@ -87,17 +122,27 @@ fn ffmpeg_write_tags(filepath: &str, tags: Vec<String>) -> Result<NamedTempFile,
 }
 
 fn format_tags(tags: &TrackGain, extension: &str) -> Vec<String> {
-    match extension {
+    let lufs = matches!(ARGS.scan_mode, ScanMode::WriteExtraTagsLufs);
+
+    let mut res = match extension {
         "ogg" => vec![
             // as to replicate the loudgain behavior we don't write track peak tags.
             // also extra tags are not allowed in Opus
-            "-metadata".to_string(), format!("{}={}", RG_TRACK_GAIN_OPUS, tags.gain.to_q78num())
+            "-metadata".to_string(), format!("{}={}", RG_TRACK_GAIN_OPUS, tags.gain.to_q78num()),
         ],
         _ => vec![
-            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_GAIN_LOWERCASE} else {RG_TRACK_GAIN}, tags.gain),
-            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_PEAK_LOWERCASE} else {RG_TRACK_PEAK}, tags.true_peak),
-            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_TRACK_RANGE_LOWERCASE} else {RG_TRACK_RANGE}, tags.range),
-            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags {RG_REFERENCE_LOUDNESS_LOWERCASE} else {RG_REFERENCE_LOUDNESS}, tags.reference_loudness),
+            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags { RG_TRACK_GAIN_LOWERCASE } else { RG_TRACK_GAIN }, if !lufs { tags.gain.to_string() } else { tags.gain.as_LU().to_string() }),
+            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags { RG_TRACK_PEAK_LOWERCASE } else { RG_TRACK_PEAK }, tags.true_peak),
         ],
+    };
+
+    if extension != "ogg" && matches!(ARGS.scan_mode, ScanMode::WriteExtraTags) || lufs {
+        res.append(&mut vec![
+            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags { RG_TRACK_RANGE_LOWERCASE } else { RG_TRACK_RANGE }, if !lufs { tags.range.to_string() } else { tags.range.as_LU().to_string() }),
+            // Reference loudness is in LUFS already
+            "-metadata".to_string(), format!("{}={}", if ARGS.lowercase_tags { RG_REFERENCE_LOUDNESS_LOWERCASE } else { RG_REFERENCE_LOUDNESS }, tags.reference_loudness),
+        ]);
     }
+
+    res
 }
