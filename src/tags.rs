@@ -36,8 +36,22 @@ pub fn save_tags(tags: &TrackGain) -> Result<(), std::io::Error> {
     let extension = get_file_extension(&tags.filepath);
     let formatted = format_tags(tags, extension);
     let new_file = ffmpeg_write_tags(&tags.filepath, formatted).expect("To be a copy of a song with the replaygain tags written to it.");
-    swap_files(&tags.filepath, new_file.path().to_str().expect("To be a string slice"))?;
+    swap_files(&tags.filepath, new_file.path().to_str().expect("To be a string slice")).unwrap();
+    println!("Hello");
+
+    if ARGS.strip_tags {
+        strip_non_rg_metadata(&tags.filepath)?;
+    }
+
     Ok(())
+}
+
+fn strip_non_rg_metadata(filepath: &str) -> Result<(), std::io::Error> {
+    // abuse a little bit the fact that ffmpeg_write_tags takes a vector of strings to pass instead of
+    // tags -map_metadata -1 which tells ffmpeg to remove metadata.
+    // Be sure to call this function BEFORE writing scan results, as this will also remove them
+    let new_file = ffmpeg_write_tags(filepath, vec!["-map_metadata".to_string(), "-1".to_string()]).expect("To work");
+    swap_files(filepath, new_file.path().to_str().expect("To be a string slice."))
 }
 
 fn remove_rg_tags(filepath: &str) -> Result<(), std::io::Error> {
@@ -99,6 +113,8 @@ fn ffmpeg_write_tags(filepath: &str, tags: Vec<String>) -> Result<NamedTempFile,
              "-y".to_string(),
              "-codec".to_string(),
              "copy".to_string()], tags, vec![temp_file.path().to_str().expect("To be a string slice").to_string()]].concat();
+
+    dbg!(popen_args.join(" "));
 
     let mut p = Popen::create(&popen_args, PopenConfig {
         stdin: Redirection::Pipe,

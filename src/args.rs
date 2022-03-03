@@ -38,13 +38,13 @@ impl Display for ScanMode {
 
 impl Debug for ScanMode {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-       let res = match self {
-           ScanMode::DontWriteTags => 's',
-           ScanMode::DeleteTags => 'd',
-           ScanMode::WriteTags => 'i',
-           ScanMode::WriteExtraTags => 'e',
-           ScanMode::WriteExtraTagsLufs => 'l',
-       };
+        let res = match self {
+            ScanMode::DontWriteTags => 's',
+            ScanMode::DeleteTags => 'd',
+            ScanMode::WriteTags => 'i',
+            ScanMode::WriteExtraTags => 'e',
+            ScanMode::WriteExtraTagsLufs => 'l',
+        };
         write!(f, "{}", res)
     }
 }
@@ -89,6 +89,9 @@ pub struct Args {
 
     #[clap(short = 's', long = "tagmode", default_value_t = ScanMode::DontWriteTags)]
     pub scan_mode: ScanMode,
+
+    #[clap(short = 'S', long = "striptags")]
+    pub strip_tags: bool,
 }
 
 pub fn build_file_list(files: Vec<String>) -> Vec<String> {
